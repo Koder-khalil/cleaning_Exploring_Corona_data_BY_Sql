@@ -1,0 +1,113 @@
+# Corona Data Cleaning and Exploration using MySQL
+
+## Project Overview
+
+This project demonstrates **data cleaning, transformation, and exploratory analysis** of COVID-19 data using MySQL. The dataset includes confirmed cases, deaths, and recoveries across different countries and provinces over time. The main goals are:
+
+* Load raw CSV data into MySQL.
+* Clean and transform the dataset (e.g., fix date formats, check for nulls).
+* Perform exploratory analysis to extract meaningful insights like monthly averages, min/max values, and highest affected countries.
+
+---
+
+## Database Setup
+
+### 1. Create Database
+
+```sql
+CREATE DATABASE IF NOT EXISTS corona_db;
+USE corona_db;
+```
+
+### 2. Import CSV Data
+
+1. Use MySQL Workbench **Table Import Wizard** to create `corona_data` table from CSV.
+2. Truncate the table to remove any existing data:
+
+```sql
+TRUNCATE TABLE corona_data;
+```
+
+### 3. Enable Local File Import
+
+```sql
+SHOW VARIABLES LIKE 'local_infile';
+SET GLOBAL local_infile = 1;
+```
+
+### 4. Load Data from CSV
+
+```sql
+LOAD DATA LOCAL INFILE 'C:/Users/khalil/Downloads/corona_data.csv'
+INTO TABLE corona_db.corona_data
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+```
+
+---
+
+## Data Cleaning
+
+### 1. Check for Null Values
+
+```sql
+SELECT
+    SUM(CASE WHEN Province IS NULL THEN 1 ELSE 0 END) AS Province,
+    SUM(CASE WHEN `Country/Region` IS NULL THEN 1 ELSE 0 END) AS `Country/Region`,
+    SUM(CASE WHEN Latitude IS NULL THEN 1 ELSE 0 END) AS Latitude,
+    SUM(CASE WHEN Longitude IS NULL THEN 1 ELSE 0 END) AS Longitude,
+    SUM(CASE WHEN `Date` IS NULL THEN 1 ELSE 0 END) AS `Date`,
+    SUM(CASE WHEN Confirmed IS NULL THEN 1 ELSE 0 END) AS Confirmed,
+    SUM(CASE WHEN Deaths IS NULL THEN 1 ELSE 0 END) AS Deaths,
+    SUM(CASE WHEN Recovered IS NULL THEN 1 ELSE 0 END) AS Recovered
+FROM corona_data;
+```
+
+### 2. Convert Date Column from Text to DATE Type
+
+```sql
+UPDATE corona_data
+SET `Date` = STR_TO_DATE(`Date`, '%Y-%m-%d')
+WHERE `Date` IS NOT NULL;
+
+ALTER TABLE corona_data
+MODIFY COLUMN `Date` DATE;
+```
+
+### 3. Verify Date Range
+
+```sql
+SELECT MIN(Date) AS Start_date, MAX(Date) AS End_date FROM corona_data;
+```
+
+* **Start Date:** 2020-01-22
+* **End Date:** 2021-06-13
+
+---
+
+## Exploratory Analysis
+
+### 1. Count Distinct Provinces
+
+```sql
+SELECT COUNT(DISTINCT Province) AS count_province FROM corona_data;
+```
+
+* Total Provinces: 72
+
+### 2. Count Distinct Months
+
+```sql
+SELECT COUNT(DISTINCT SUBSTR(`Date`,1,7)) AS num_months FROM corona_data;
+```
+
+* Dataset spans **18 months**.
+
+### 3. Monthly Average Cases
+
+```sql
+SELECT DISTINCT(SUBSTR(`Date`,1,7)) AS Month,
+       ROUND(AVG(Co
+```
